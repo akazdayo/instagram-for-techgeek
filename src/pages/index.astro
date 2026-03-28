@@ -16,7 +16,7 @@ const defaultPrompt = buildPrompt(defaultDescription);
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Tech Kirakira Studio</title>
 		<meta
@@ -658,17 +658,12 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 					border-radius: 24px;
 				}
 
-				.hero-notes span {
-					width: 100%;
-					text-align: center;
-				}
-
 				.preview-grid {
 					grid-template-columns: 1fr;
 				}
 
 				h1 {
-					font-size: clamp(2.5rem, 16vw, 4rem);
+					font-size: clamp(2rem, 10vw, 3rem);
 				}
 
 				.lede {
@@ -676,7 +671,7 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 				}
 
 				textarea {
-					min-height: 180px;
+					min-height: 150px;
 				}
 
 				.result-actions {
@@ -689,34 +684,95 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 			}
 
 			@media (max-width: 480px) {
+				.shell {
+					padding-top: clamp(16px, 4vw, 24px);
+					padding-bottom: clamp(24px, 5vw, 40px);
+				}
+
+				.hero {
+					margin-bottom: 18px;
+				}
+
+				.hero-notes {
+					gap: 8px;
+				}
+
+				.hero-notes span {
+					font-size: 0.82rem;
+					padding: 8px 12px;
+				}
+
 				.eyebrow {
 					font-size: 0.74rem;
 					letter-spacing: 0.18em;
 				}
 
+				h1 {
+					font-size: clamp(1.8rem, 9vw, 2.4rem);
+				}
+
+				.lede {
+					font-size: 0.94rem;
+					margin-top: 12px;
+				}
+
+				.workspace {
+					gap: 16px;
+				}
+
+				.controls {
+					gap: 14px;
+				}
+
 				.panel-header h2 {
-					font-size: 1.55rem;
+					font-size: 1.45rem;
 				}
 
 				.preview-meta h3 {
-					font-size: 1.15rem;
+					font-size: 1.1rem;
 				}
 
 				input,
 				select,
 				textarea {
-					padding: 13px 14px;
+					padding: 12px 14px;
 					border-radius: 16px;
+					font-size: 16px;
+				}
+
+				textarea {
+					min-height: 120px;
+				}
+
+				.submit {
+					padding: 14px 20px;
 				}
 
 				.frame {
-					padding: 14px;
-					border-radius: 22px;
+					padding: 12px;
+					border-radius: 20px;
 				}
 
 				.frame::after {
-					inset: 10px;
-					border-radius: 16px;
+					inset: 8px;
+					border-radius: 14px;
+				}
+			}
+
+			@media (max-width: 360px) {
+				.hero,
+				.panel {
+					padding: 16px;
+					border-radius: 20px;
+				}
+
+				h1 {
+					font-size: clamp(1.6rem, 8vw, 2rem);
+				}
+
+				.hero-notes span {
+					font-size: 0.78rem;
+					padding: 6px 10px;
 				}
 			}
 		</style>
