@@ -1,0 +1,666 @@
+---
+const defaultDescription =
+	'silver laptop, split keyboard, translucent keycaps, and a tiny arcade board';
+
+const buildPrompt = (subjectDescription: string) =>
+	`A sophisticated, kirakira-styled flat-lay photograph presented within a white, slightly aged Polaroid-style frame. [The central focus is a curated arrangement of the key items from the user's provided image, like a ${subjectDescription}.] If multiple items are provided, they are clustered neatly, similar to the arrangement in image_1.png.
+The items rest on a mix of textures: a soft, plush white and pink faux-fur blanket and a smooth, clean white fabric. Scattered aesthetic details include large pearl beads, dried rose petals, and delicate rose-gold metal charms (hearts, stars).
+The photo itself is within a Polaroid frame with a faded, slightly light-exposed border. On the bottom white margin of the Polaroid frame, two small, elegant text lines are present. Top line (generic quote): "FAVORITE ESSENTIALS ✨". Bottom line (generic hashtags): "#YourStyle #TechAesthetic".
+The entire scene is bathed in soft, natural sunlight and is covered with a subtle overall glitter dust overlay and small, sparkling star-shaped lens flare effects (the 'kirakira' effect).`;
+
+const defaultPrompt = buildPrompt(defaultDescription);
+---
+
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Tech Kirakira Studio</title>
+		<meta
+			name="description"
+			content="技術オタクの持ち物を kirakira な Instagram flat-lay に変換する Web アプリ。"
+		/>
+	</head>
+	<body>
+		<div class="backdrop"></div>
+		<main class="shell">
+			<section class="hero">
+				<p class="eyebrow">TECH GIRLCORE LAB</p>
+				<h1>Tech Kirakira Studio</h1>
+				<p class="lede">
+					手元のガジェット画像を、OpenRouter の
+					<code>google/gemini-3.1-flash-image-preview</code>
+					で Instagram っぽい flat-lay に再編集します。
+				</p>
+				<div class="hero-notes">
+					<span>Polaroid frame</span>
+					<span>Rose-gold charms</span>
+					<span>Glitter dust</span>
+				</div>
+			</section>
+
+			<section class="workspace">
+				<form id="editor-form" class="panel controls" enctype="multipart/form-data">
+					<div class="panel-header">
+						<h2>Input</h2>
+						<p>画像と被写体説明を指定すると、固定プロンプトに差し込みます。</p>
+					</div>
+
+					<label class="field">
+						<span>元画像</span>
+						<input
+							id="image"
+							name="image"
+							type="file"
+							accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+							required
+						/>
+					</label>
+
+					<label class="field">
+						<span>被写体の説明</span>
+						<input
+							id="subjectDescription"
+							name="subjectDescription"
+							type="text"
+							value={defaultDescription}
+							placeholder="silver laptop, split keyboard, translucent keycaps, and a tiny arcade board"
+							required
+						/>
+					</label>
+
+					<label class="field">
+						<span>出力アスペクト比</span>
+						<select id="aspectRatio" name="aspectRatio">
+							<option value="4:5" selected>4:5 / Instagram portrait</option>
+							<option value="1:1">1:1 / square</option>
+							<option value="3:4">3:4 / portrait</option>
+							<option value="9:16">9:16 / story</option>
+							<option value="16:9">16:9 / landscape</option>
+						</select>
+					</label>
+
+					<div class="field">
+						<span>使用プロンプト</span>
+						<textarea id="promptPreview" readonly>{defaultPrompt}</textarea>
+					</div>
+
+					<button id="submitButton" class="submit" type="submit">
+						<span class="button-label">kirakira に変換する</span>
+						<span class="button-shine"></span>
+					</button>
+
+					<p class="env-note">
+						サーバー側で <code>OPENROUTER_API_KEY</code> を利用します。ブラウザには公開しません。
+					</p>
+				</form>
+
+				<div class="panel previews">
+					<div class="panel-header">
+						<h2>Preview</h2>
+						<p>入力画像と生成結果を並べて確認できます。</p>
+					</div>
+
+					<div class="preview-grid">
+						<section class="preview-card">
+							<div class="preview-meta">
+								<h3>Input image</h3>
+								<p>アップロード直後にここへ表示します。</p>
+							</div>
+							<div class="frame">
+								<img id="inputPreview" alt="入力プレビュー" hidden />
+								<div id="inputPlaceholder" class="placeholder">
+									<p id="inputPlaceholderText">PNG / JPEG / WEBP / GIF / HEIC / HEIF</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="preview-card">
+							<div class="preview-meta">
+								<h3>Output image</h3>
+								<p id="statusText">画像を選択して生成を開始してください。</p>
+							</div>
+							<div class="frame">
+								<img id="resultImage" alt="生成結果" hidden />
+								<div id="resultPlaceholder" class="placeholder">
+									<p>kirakira 結果がここに表示されます</p>
+								</div>
+							</div>
+							<div id="resultActions" class="result-actions" hidden>
+								<a id="downloadLink" class="download" href="#" download="kirakira-output.png">
+									画像を保存
+								</a>
+							</div>
+						</section>
+					</div>
+
+					<p id="errorText" class="error" role="alert" hidden></p>
+				</div>
+			</section>
+		</main>
+
+		<script define:vars={{ defaultDescription }}>
+			const buildPrompt = (subjectDescription) =>
+				`A sophisticated, kirakira-styled flat-lay photograph presented within a white, slightly aged Polaroid-style frame. [The central focus is a curated arrangement of the key items from the user's provided image, like a ${subjectDescription}.] If multiple items are provided, they are clustered neatly, similar to the arrangement in image_1.png.
+The items rest on a mix of textures: a soft, plush white and pink faux-fur blanket and a smooth, clean white fabric. Scattered aesthetic details include large pearl beads, dried rose petals, and delicate rose-gold metal charms (hearts, stars).
+The photo itself is within a Polaroid frame with a faded, slightly light-exposed border. On the bottom white margin of the Polaroid frame, two small, elegant text lines are present. Top line (generic quote): "FAVORITE ESSENTIALS ✨". Bottom line (generic hashtags): "#YourStyle #TechAesthetic".
+The entire scene is bathed in soft, natural sunlight and is covered with a subtle overall glitter dust overlay and small, sparkling star-shaped lens flare effects (the 'kirakira' effect).`;
+
+			const form = document.querySelector('#editor-form');
+			const fileInput = document.querySelector('#image');
+			const descriptionInput = document.querySelector('#subjectDescription');
+			const promptPreview = document.querySelector('#promptPreview');
+			const inputPreview = document.querySelector('#inputPreview');
+			const inputPlaceholder = document.querySelector('#inputPlaceholder');
+			const inputPlaceholderText = document.querySelector('#inputPlaceholderText');
+			const resultImage = document.querySelector('#resultImage');
+			const resultPlaceholder = document.querySelector('#resultPlaceholder');
+			const resultActions = document.querySelector('#resultActions');
+			const downloadLink = document.querySelector('#downloadLink');
+			const statusText = document.querySelector('#statusText');
+			const errorText = document.querySelector('#errorText');
+			const submitButton = document.querySelector('#submitButton');
+			const buttonLabel = submitButton.querySelector('.button-label');
+
+			let currentInputPreviewUrl = '';
+
+			const syncPromptPreview = () => {
+				const description = descriptionInput.value.trim() || defaultDescription;
+				promptPreview.value = buildPrompt(description);
+			};
+
+			const clearError = () => {
+				errorText.hidden = true;
+				errorText.textContent = '';
+			};
+
+			const showError = (message) => {
+				errorText.hidden = false;
+				errorText.textContent = message;
+			};
+
+			const updateInputPreview = () => {
+				const [file] = fileInput.files ?? [];
+				if (!file) {
+					if (currentInputPreviewUrl) {
+						URL.revokeObjectURL(currentInputPreviewUrl);
+						currentInputPreviewUrl = '';
+					}
+					inputPreview.hidden = true;
+					inputPreview.removeAttribute('src');
+					inputPlaceholder.hidden = false;
+					inputPlaceholderText.textContent = 'PNG / JPEG / WEBP / GIF / HEIC / HEIF';
+					return;
+				}
+
+				const lowerType = file.type.toLowerCase();
+				const lowerName = file.name.toLowerCase();
+				const isHeic =
+					lowerType === 'image/heic' ||
+					lowerType === 'image/heif' ||
+					lowerType === 'image/heic-sequence' ||
+					lowerType === 'image/heif-sequence' ||
+					lowerName.endsWith('.heic') ||
+					lowerName.endsWith('.heif');
+
+				if (isHeic) {
+					if (currentInputPreviewUrl) {
+						URL.revokeObjectURL(currentInputPreviewUrl);
+						currentInputPreviewUrl = '';
+					}
+					inputPreview.hidden = true;
+					inputPreview.removeAttribute('src');
+					inputPlaceholder.hidden = false;
+					inputPlaceholderText.textContent =
+						'HEIC / HEIF を選択しました。ブラウザ内プレビューが出なくても、そのまま送信できます。';
+					return;
+				}
+
+				if (currentInputPreviewUrl) {
+					URL.revokeObjectURL(currentInputPreviewUrl);
+				}
+
+				currentInputPreviewUrl = URL.createObjectURL(file);
+				inputPreview.src = currentInputPreviewUrl;
+				inputPreview.hidden = false;
+				inputPlaceholder.hidden = true;
+				inputPlaceholderText.textContent = 'PNG / JPEG / WEBP / GIF / HEIC / HEIF';
+			};
+
+			descriptionInput.addEventListener('input', syncPromptPreview);
+			fileInput.addEventListener('change', updateInputPreview);
+			syncPromptPreview();
+
+			form.addEventListener('submit', async (event) => {
+				event.preventDefault();
+				clearError();
+
+				const [file] = fileInput.files ?? [];
+				if (!file) {
+					showError('画像ファイルを選択してください。');
+					return;
+				}
+
+				submitButton.disabled = true;
+				buttonLabel.textContent = '生成中...';
+				statusText.textContent = 'OpenRouter に送信して、kirakira flat-lay を生成しています。';
+
+				try {
+					const response = await fetch('/api/edit', {
+						method: 'POST',
+						body: new FormData(form),
+					});
+
+					const payload = await response.json().catch(() => ({}));
+
+					if (!response.ok) {
+						throw new Error(payload.error ?? '画像生成に失敗しました。');
+					}
+
+					resultImage.src = payload.imageUrl;
+					resultImage.hidden = false;
+					resultPlaceholder.hidden = true;
+					resultActions.hidden = false;
+					downloadLink.href = payload.imageUrl;
+					downloadLink.download = 'kirakira-output.png';
+					statusText.textContent =
+						payload.message ??
+						'生成完了。Polaroid スタイルの結果を確認して必要なら保存してください。';
+				} catch (error) {
+					resultImage.hidden = true;
+					resultImage.removeAttribute('src');
+					resultPlaceholder.hidden = false;
+					resultActions.hidden = true;
+					statusText.textContent = 'エラーが発生しました。入力内容と API キーを確認してください。';
+					showError(error instanceof Error ? error.message : '不明なエラーが発生しました。');
+				} finally {
+					submitButton.disabled = false;
+					buttonLabel.textContent = 'kirakira に変換する';
+				}
+			});
+		</script>
+
+		<style>
+			:root {
+				--cream: #fffaf6;
+				--blush: #ffe0ea;
+				--rose: #d67a92;
+				--rose-deep: #9c4f65;
+				--gold: #d0a56f;
+				--ink: #352633;
+				--panel: rgba(255, 252, 249, 0.82);
+				--line: rgba(160, 99, 122, 0.18);
+				--shadow: 0 24px 80px rgba(168, 90, 117, 0.18);
+				font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;
+				color: var(--ink);
+				background: #fff7fb;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			body {
+				margin: 0;
+				min-height: 100vh;
+				background:
+					radial-gradient(circle at top left, rgba(255, 222, 234, 0.9), transparent 30%),
+					radial-gradient(circle at top right, rgba(255, 245, 214, 0.7), transparent 28%),
+					linear-gradient(180deg, #fff8fb 0%, #fffdf9 50%, #fff4ef 100%);
+			}
+
+			.backdrop {
+				position: fixed;
+				inset: 0;
+				pointer-events: none;
+				background-image:
+					radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0) 10%),
+					radial-gradient(circle at 82% 24%, rgba(255, 255, 255, 0.8) 0, rgba(255, 255, 255, 0) 12%),
+					radial-gradient(circle at 70% 72%, rgba(255, 232, 240, 0.7) 0, rgba(255, 232, 240, 0) 16%);
+				opacity: 0.9;
+			}
+
+			.shell {
+				position: relative;
+				max-width: 1280px;
+				margin: 0 auto;
+				padding: 56px 20px 80px;
+			}
+
+			.hero {
+				margin-bottom: 28px;
+				padding: 36px;
+				border: 1px solid rgba(255, 255, 255, 0.68);
+				border-radius: 32px;
+				background:
+					linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 240, 246, 0.92)),
+					linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3));
+				box-shadow: var(--shadow);
+				backdrop-filter: blur(18px);
+			}
+
+			.eyebrow {
+				margin: 0 0 14px;
+				font-size: 0.82rem;
+				letter-spacing: 0.24em;
+				text-transform: uppercase;
+				color: var(--rose-deep);
+			}
+
+			h1,
+			h2,
+			h3 {
+				font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+				font-weight: 700;
+				letter-spacing: 0.01em;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: clamp(2.8rem, 5vw, 5.2rem);
+				line-height: 0.95;
+			}
+
+			.lede {
+				max-width: 720px;
+				margin: 18px 0 0;
+				font-size: 1.05rem;
+				line-height: 1.7;
+			}
+
+			code {
+				padding: 0.18rem 0.42rem;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.8);
+				font-size: 0.95em;
+			}
+
+			.hero-notes {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin-top: 22px;
+			}
+
+			.hero-notes span {
+				padding: 10px 14px;
+				border: 1px solid rgba(214, 122, 146, 0.16);
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.66);
+				font-size: 0.9rem;
+			}
+
+			.workspace {
+				display: grid;
+				grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+				gap: 22px;
+			}
+
+			.panel {
+				padding: 24px;
+				border: 1px solid var(--line);
+				border-radius: 28px;
+				background: var(--panel);
+				box-shadow: var(--shadow);
+				backdrop-filter: blur(18px);
+			}
+
+			.panel-header h2 {
+				margin: 0;
+				font-size: 1.8rem;
+			}
+
+			.panel-header p {
+				margin: 10px 0 0;
+				color: rgba(53, 38, 51, 0.76);
+				line-height: 1.6;
+			}
+
+			.controls {
+				display: grid;
+				gap: 18px;
+				align-content: start;
+			}
+
+			.field {
+				display: grid;
+				gap: 10px;
+			}
+
+			.field span {
+				font-size: 0.94rem;
+				font-weight: 700;
+				color: var(--rose-deep);
+			}
+
+			input,
+			select,
+			textarea,
+			button,
+			a {
+				font: inherit;
+			}
+
+			input,
+			select,
+			textarea {
+				width: 100%;
+				padding: 14px 16px;
+				border: 1px solid rgba(160, 99, 122, 0.24);
+				border-radius: 18px;
+				background: rgba(255, 255, 255, 0.86);
+				color: var(--ink);
+			}
+
+			textarea {
+				min-height: 210px;
+				resize: vertical;
+				line-height: 1.6;
+			}
+
+			input:focus,
+			select:focus,
+			textarea:focus {
+				outline: 2px solid rgba(214, 122, 146, 0.22);
+				border-color: rgba(214, 122, 146, 0.48);
+			}
+
+			.submit {
+				position: relative;
+				overflow: hidden;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				padding: 16px 20px;
+				border: 0;
+				border-radius: 999px;
+				background: linear-gradient(135deg, #f8b6c7, #f2d9a0);
+				color: #41212e;
+				font-weight: 800;
+				cursor: pointer;
+				transition:
+					transform 180ms ease,
+					box-shadow 180ms ease,
+					opacity 180ms ease;
+				box-shadow: 0 18px 36px rgba(214, 122, 146, 0.22);
+			}
+
+			.submit:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 22px 40px rgba(214, 122, 146, 0.28);
+			}
+
+			.submit:disabled {
+				cursor: wait;
+				opacity: 0.7;
+				transform: none;
+			}
+
+			.button-shine {
+				position: absolute;
+				inset: 0;
+				background: linear-gradient(
+					120deg,
+					transparent 0%,
+					rgba(255, 255, 255, 0.24) 38%,
+					transparent 62%
+				);
+				transform: translateX(-120%);
+				animation: sweep 3.6s infinite;
+			}
+
+			.env-note {
+				margin: 0;
+				font-size: 0.92rem;
+				line-height: 1.6;
+				color: rgba(53, 38, 51, 0.78);
+			}
+
+			.preview-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 18px;
+				margin-top: 18px;
+			}
+
+			.preview-card {
+				display: grid;
+				gap: 14px;
+			}
+
+			.preview-meta h3 {
+				margin: 0;
+				font-size: 1.3rem;
+			}
+
+			.preview-meta p {
+				margin: 6px 0 0;
+				line-height: 1.5;
+				color: rgba(53, 38, 51, 0.76);
+			}
+
+			.frame {
+				position: relative;
+				aspect-ratio: 4 / 5;
+				padding: 20px;
+				border-radius: 26px;
+				background:
+					linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 245, 247, 0.92)),
+					repeating-linear-gradient(
+						45deg,
+						rgba(255, 255, 255, 0.4) 0,
+						rgba(255, 255, 255, 0.4) 10px,
+						rgba(255, 241, 245, 0.6) 10px,
+						rgba(255, 241, 245, 0.6) 20px
+					);
+				border: 1px solid rgba(160, 99, 122, 0.16);
+			}
+
+			.frame::after {
+				content: '';
+				position: absolute;
+				inset: 14px;
+				border-radius: 20px;
+				border: 1px solid rgba(255, 255, 255, 0.7);
+				pointer-events: none;
+			}
+
+			.frame img,
+			.placeholder {
+				width: 100%;
+				height: 100%;
+				border-radius: 18px;
+			}
+
+			.frame img {
+				display: block;
+				object-fit: cover;
+				box-shadow: 0 20px 42px rgba(165, 133, 118, 0.22);
+			}
+
+			.placeholder {
+				display: grid;
+				place-items: center;
+				background:
+					radial-gradient(circle at top, rgba(255, 230, 238, 0.95), rgba(255, 255, 255, 0.88)),
+					linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(250, 230, 236, 0.9));
+				border: 1px dashed rgba(214, 122, 146, 0.28);
+				color: rgba(156, 79, 101, 0.84);
+				text-align: center;
+				padding: 20px;
+			}
+
+			.placeholder p {
+				max-width: 18ch;
+				margin: 0;
+				line-height: 1.6;
+			}
+
+			.result-actions {
+				display: flex;
+				justify-content: flex-end;
+			}
+
+			.download {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				padding: 12px 16px;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.9);
+				border: 1px solid rgba(160, 99, 122, 0.22);
+				color: var(--ink);
+				text-decoration: none;
+				font-weight: 700;
+			}
+
+			.error {
+				margin: 18px 0 0;
+				padding: 14px 16px;
+				border-radius: 18px;
+				background: rgba(194, 65, 93, 0.12);
+				color: #8a2441;
+				line-height: 1.6;
+			}
+
+			@keyframes sweep {
+				0% {
+					transform: translateX(-120%);
+				}
+				50%,
+				100% {
+					transform: translateX(120%);
+				}
+			}
+
+			@media (max-width: 980px) {
+				.workspace {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			@media (max-width: 720px) {
+				.shell {
+					padding: 28px 14px 48px;
+				}
+
+				.hero,
+				.panel {
+					padding: 20px;
+					border-radius: 24px;
+				}
+
+				.preview-grid {
+					grid-template-columns: 1fr;
+				}
+
+				h1 {
+					font-size: clamp(2.5rem, 16vw, 4rem);
+				}
+			}
+		</style>
+	</body>
+</html>
