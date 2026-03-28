@@ -32,5 +32,11 @@ bun dev
 ## Commands
 
 - `bun dev` - 開発サーバー
-- `bun build` - 本番ビルド
-- `bun preview` - ビルド結果の確認
+- `bun run build` - 本番ビルド
+- `bun run preview` - ビルド結果の確認
+
+## Deploy to Netlify
+
+- Netlify では Astro の Netlify adapter を使って Functions に API ルートを載せます。
+- `OPENROUTER_API_KEY` を Netlify の Environment variables に設定してください。
+- このリポジトリには `netlify.toml` があるので、Git 連携デプロイ時はそのまま `npm run build` が使われます。
