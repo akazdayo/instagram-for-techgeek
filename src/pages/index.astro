@@ -306,6 +306,7 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 			body {
 				margin: 0;
 				min-height: 100vh;
+				overflow-x: hidden;
 				background:
 					radial-gradient(circle at top left, rgba(255, 222, 234, 0.9), transparent 30%),
 					radial-gradient(circle at top right, rgba(255, 245, 214, 0.7), transparent 28%),
@@ -327,12 +328,12 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 				position: relative;
 				max-width: 1280px;
 				margin: 0 auto;
-				padding: 56px 20px 80px;
+				padding: clamp(24px, 5vw, 56px) clamp(14px, 3vw, 20px) clamp(40px, 7vw, 80px);
 			}
 
 			.hero {
 				margin-bottom: 28px;
-				padding: 36px;
+				padding: clamp(22px, 4vw, 36px);
 				border: 1px solid rgba(255, 255, 255, 0.68);
 				border-radius: 32px;
 				background:
@@ -369,6 +370,7 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 				margin: 18px 0 0;
 				font-size: 1.05rem;
 				line-height: 1.7;
+				overflow-wrap: anywhere;
 			}
 
 			code {
@@ -376,6 +378,8 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 				border-radius: 999px;
 				background: rgba(255, 255, 255, 0.8);
 				font-size: 0.95em;
+				overflow-wrap: anywhere;
+				word-break: break-word;
 			}
 
 			.hero-notes {
@@ -395,12 +399,14 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 
 			.workspace {
 				display: grid;
-				grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+				grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
 				gap: 22px;
+				align-items: start;
 			}
 
 			.panel {
-				padding: 24px;
+				min-width: 0;
+				padding: clamp(18px, 3vw, 24px);
 				border: 1px solid var(--line);
 				border-radius: 28px;
 				background: var(--panel);
@@ -474,6 +480,7 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 				display: inline-flex;
 				align-items: center;
 				justify-content: center;
+				width: 100%;
 				padding: 16px 20px;
 				border: 0;
 				border-radius: 999px;
@@ -602,6 +609,8 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 			.result-actions {
 				display: flex;
 				justify-content: flex-end;
+				flex-wrap: wrap;
+				gap: 12px;
 			}
 
 			.download {
@@ -643,14 +652,15 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 			}
 
 			@media (max-width: 720px) {
-				.shell {
-					padding: 28px 14px 48px;
-				}
-
 				.hero,
 				.panel {
 					padding: 20px;
 					border-radius: 24px;
+				}
+
+				.hero-notes span {
+					width: 100%;
+					text-align: center;
 				}
 
 				.preview-grid {
@@ -659,6 +669,54 @@ The entire scene is bathed in soft, natural sunlight and is covered with a subtl
 
 				h1 {
 					font-size: clamp(2.5rem, 16vw, 4rem);
+				}
+
+				.lede {
+					font-size: 0.98rem;
+				}
+
+				textarea {
+					min-height: 180px;
+				}
+
+				.result-actions {
+					justify-content: stretch;
+				}
+
+				.download {
+					width: 100%;
+				}
+			}
+
+			@media (max-width: 480px) {
+				.eyebrow {
+					font-size: 0.74rem;
+					letter-spacing: 0.18em;
+				}
+
+				.panel-header h2 {
+					font-size: 1.55rem;
+				}
+
+				.preview-meta h3 {
+					font-size: 1.15rem;
+				}
+
+				input,
+				select,
+				textarea {
+					padding: 13px 14px;
+					border-radius: 16px;
+				}
+
+				.frame {
+					padding: 14px;
+					border-radius: 22px;
+				}
+
+				.frame::after {
+					inset: 10px;
+					border-radius: 16px;
 				}
 			}
 		</style>
